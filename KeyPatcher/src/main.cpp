@@ -80,6 +80,7 @@ bool patchFile(const std::filesystem::path& exePath) {
         std::cerr <<
             "Failed to open file for patching! This may have happened because:\n"
             "- The Minecraft executable is stored in an OS-protected folder (such as WindowsApps) and has not been unlocked\n"
+            "- The Minecraft executable is currently in use\n"
             "- This program does not have the necessary permissions to write to the Minecraft executable\n"
             "Note that even with sufficient write permissions, applying modifications to appx files requires sideloading!\n";
         return false;
