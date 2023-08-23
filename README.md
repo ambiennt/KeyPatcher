@@ -1,6 +1,6 @@
 # KeyPatcher
 
-### A programmatic approach to MCBE's broken Xbox Live authentication
+### A programmatic approach to fixing MCBE's broken Xbox Live authentication
 - [Why is this needed?](https://blog.tobiasgrether.com/2023/08/23/how-microsoft-broke-minecraft.html)
 - Patch any applicable Minecraft for Windows executable with an updated public Xbox Live authentication  key (with one major caveat)
 
@@ -22,9 +22,13 @@
 ### How to use
 - Make sure Minecraft for Windows is closed beforehand
 - Download the latest release of the patcher [here](https://github.com/ambiennt/KeyPatcher/releases/)
-- follow the steps described in the [Workarounds header](https://github.com/ambiennt/KeyPatcher#workarounds)
+- Follow the steps described in the [Workarounds header](https://github.com/ambiennt/KeyPatcher#workarounds)
 - You may need to run the patcher with administrator permissions
 - Follow the prompts in the console as required
+
+### License
+- GPLv3
+- However, you are not permitted to put this tool behind some sort of paywall, such as a 3rd party link shortener or other paid product
 
 ### Other remarks
 - I am aware that the process to apply a seemingly simple patch is quite complex for the majority of users who do not use version managers, but this is largely due to Microsoft's restrictive UWP application ecosystem

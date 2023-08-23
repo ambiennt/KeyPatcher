@@ -12,7 +12,7 @@ namespace KeyData {
 
 } // namespace KeyData
 
-using lps_array_t = std::array<int32_t, KeyData::NEW_ROOT_PUBLIC_KEY.size()>;
+using lps_array_t = std::array<int32_t, KeyData::NEW_ROOT_PUBLIC_KEY.length()>;
 
 // create partial match table (longest proper prefix) for Knuth-Morris-Pratt algorithm
 // https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
