@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Treat *.h files as C++ headers
+*.h linguist-language=C++
