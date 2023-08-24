@@ -101,7 +101,7 @@ bool patchFile(const std::filesystem::path& exePath) {
         file.seekp(*keyOffset, std::ios::beg);
 
         // patch in new key
-        file.write(KeyData::NEW_ROOT_PUBLIC_KEY.data(), KeyData::NEW_ROOT_PUBLIC_KEY.size());
+        file.write(KeyData::NEW_ROOT_PUBLIC_KEY.data(), KeyData::NEW_ROOT_PUBLIC_KEY.length());
     }
     catch (const std::ios_base::failure& ex) {
         std::cerr << "Failed to patch bytes: " << ex.what() << '\n';
@@ -160,13 +160,21 @@ std::optional<std::filesystem::path> getDefaultMinecraftPath() {
 }
 */
 
-bool isValidExePath(const std::wstring& input) {
-    if (!input.ends_with(L"Minecraft.Windows.exe")) {
+// if the user provided the folder path instead of the direct exe path
+void sanitizeInputPathIfNeeded(std::filesystem::path& path) {
+    try {
+        if (std::filesystem::is_directory(path)) {
+            path /= L"Minecraft.Windows.exe";
+        }
+    }
+    catch (...) {}
+}
+
+bool isValidExePath(const std::filesystem::path& path) {
+    if (path.filename() != L"Minecraft.Windows.exe") {
         std::cerr << "File path did not resolve to a Minecraft executable!\n";
         return false;
     }
-
-    std::filesystem::path path{ input };
 
     try {
         if (!std::filesystem::exists(path)) {
@@ -191,14 +199,14 @@ bool isValidExePath(const std::wstring& input) {
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused]] char** envp) {
 
     std::wstring input{};
-    std::filesystem::path path{};
     bool patchedExe = false;
 
     while (!patchedExe) {
 
-        std::cout << "Please enter the full Minecraft for Windows executable file path: ";
+        std::cout << "Enter the full path for the Minecraft for Windows executable file OR its parent folder: ";
         std::getline(std::wcin, input);
 
+        std::filesystem::path path{ input };
         bool hasValidPath = false;
 
         /*if (input.empty()) { // wants to use WindowsApps path (default)
@@ -207,16 +215,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused
                 path = *opt;
                 hasValidPath = true;
             }
+            else {
+                std::cerr << "Could not locate default Minecraft for Windows installation directory!\n";
+            }
         }
         else {
-            if (isValidExePath(input)) {
-                path = input;
+            sanitizeInputPathIfNeeded(path);
+
+            if (isValidExePath(path)) {
                 hasValidPath = true;
             }
         }*/
 
-        if (isValidExePath(input)) {
-            path = input;
+        sanitizeInputPathIfNeeded(path);
+
+        if (isValidExePath(path)) {
             hasValidPath = true;
         }
 
