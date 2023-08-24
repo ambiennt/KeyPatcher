@@ -160,21 +160,35 @@ std::optional<std::filesystem::path> getDefaultMinecraftPath() {
 }
 */
 
+std::array<std::wstring, 4> validFiles{
+    L"Minecraft.Windows.exe",
+    L"bedrock_server.exe",
+    L"bedrock_server_mod.exe",
+    L"libminecraftpe.so"
+};
+
 // if the user provided the folder path instead of the direct exe path
 void sanitizeInputPathIfNeeded(std::filesystem::path& path) {
     try {
-        if (std::filesystem::is_directory(path)) {
-            path /= L"Minecraft.Windows.exe";
+        if (!std::filesystem::is_directory(path)) {
+            return;
+        }
+        for (auto& it : std::filesystem::directory_iterator(path)) {
+            if (std::find(validFiles.begin(), validFiles.end(), it.path().filename().wstring()) != validFiles.end() && !it.is_directory()) {
+                path = it.path();
+            }
         }
     }
     catch (...) {}
 }
 
 bool isValidExePath(const std::filesystem::path& path) {
-    if (path.filename() != L"Minecraft.Windows.exe") {
+    auto fn = path.filename().wstring();
+    if (std::find(validFiles.begin(), validFiles.end(), fn) == validFiles.end()) {
         std::cerr << "File path did not resolve to a Minecraft executable!\n";
         return false;
     }
+
 
     try {
         if (!std::filesystem::exists(path)) {
