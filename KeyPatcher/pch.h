@@ -9,3 +9,5 @@
 #include <string_view>
 #include <optional>
 #include <array>
+#include <cwctype>
+#include <algorithm>

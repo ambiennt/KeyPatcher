@@ -14,6 +14,21 @@ namespace KeyData {
 
 using lps_array_t = std::array<int32_t, KeyData::NEW_ROOT_PUBLIC_KEY.length()>;
 
+inline constexpr std::array<std::wstring_view, 5> VALID_FILES{
+    L"Minecraft.Windows.exe", // windows client
+    L"bedrock_server.exe", // windows server
+    L"bedrock_server_mod.exe", // windows modded server
+    L"bedrock_server", // linux server
+    L"libminecraftpe.so", // android client
+};
+
+bool wstringCaseInsensitiveEquals(std::wstring_view lhs, std::wstring_view rhs) {
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
+        [](std::wint_t lhs, std::wint_t rhs) -> bool {
+            return std::towlower(lhs) == std::towlower(rhs);
+        });
+}
+
 // create partial match table (longest proper prefix) for Knuth-Morris-Pratt algorithm
 // https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
 lps_array_t computeLPSArray(std::string_view pattern) {
@@ -141,7 +156,7 @@ std::optional<std::filesystem::path> getDefaultMinecraftFolder(const std::filesy
         }
     }
     catch (std::filesystem::filesystem_error& ex) {
-        std::cerr << "Could not locate default Minecraft folder: " << ex.what() << '\n';
+        std::cerr << "Could not locate default Minecraft for Windows folder: " << ex.what() << '\n';
     }
 
     return std::nullopt;
@@ -160,22 +175,22 @@ std::optional<std::filesystem::path> getDefaultMinecraftPath() {
 }
 */
 
-std::array<std::wstring, 4> validFiles{
-    L"Minecraft.Windows.exe",
-    L"bedrock_server.exe",
-    L"bedrock_server_mod.exe",
-    L"libminecraftpe.so"
-};
-
 // if the user provided the folder path instead of the direct exe path
 void sanitizeInputPathIfNeeded(std::filesystem::path& path) {
     try {
         if (!std::filesystem::is_directory(path)) {
             return;
         }
-        for (auto& it : std::filesystem::directory_iterator(path)) {
-            if (std::find(validFiles.begin(), validFiles.end(), it.path().filename().wstring()) != validFiles.end() && !it.is_directory()) {
-                path = it.path();
+        for (const auto& it : std::filesystem::directory_iterator(path)) {
+            if (!it.is_directory()) {
+                auto fileName = it.path().filename().wstring();
+                auto result = std::find_if(VALID_FILES.begin(), VALID_FILES.end(), [&](std::wstring_view validFile) -> bool { // select first match in the directory
+                    return wstringCaseInsensitiveEquals(validFile, fileName); // windows files are case insensitive, lets give some leeway to the end user
+                });
+
+                if (result != VALID_FILES.end()) {
+                    path = it.path();
+                }
             }
         }
     }
@@ -183,12 +198,16 @@ void sanitizeInputPathIfNeeded(std::filesystem::path& path) {
 }
 
 bool isValidExePath(const std::filesystem::path& path) {
-    auto fn = path.filename().wstring();
-    if (std::find(validFiles.begin(), validFiles.end(), fn) == validFiles.end()) {
+
+    auto fileName = path.filename().wstring();
+    auto result = std::find_if(VALID_FILES.begin(), VALID_FILES.end(), [&](std::wstring_view validFile) -> bool {
+        return wstringCaseInsensitiveEquals(validFile, fileName);
+    });
+
+    if (result == VALID_FILES.end()) {
         std::cerr << "File path did not resolve to a Minecraft executable!\n";
         return false;
     }
-
 
     try {
         if (!std::filesystem::exists(path)) {
@@ -200,14 +219,12 @@ bool isValidExePath(const std::filesystem::path& path) {
             std::cerr << "Specified path does not point to a file!\n";
             return false;
         }
-
-        return true;
     }
     catch (std::filesystem::filesystem_error& ex) {
         std::cerr << "Failed to verify existence of Minecraft executable: " << ex.what() << '\n';
     }
 
-    return false;
+    return true;
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused]] char** envp) {
@@ -217,7 +234,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused
 
     while (!patchedExe) {
 
-        std::cout << "Enter the full path for the Minecraft for Windows executable file OR its parent folder: ";
+        std::cout << "Enter the full path for the Minecraft executable file OR its parent folder: ";
         std::getline(std::wcin, input);
 
         std::filesystem::path path{ input };
@@ -248,6 +265,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused
         }
 
         if (hasValidPath) {
+            std::wcout << L"Attempting to patch " << path.wstring() << L"...\n";
             patchedExe = patchFile(path);
         }
     }
