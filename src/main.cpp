@@ -1,3 +1,14 @@
+#include <filesystem>
+#include <cstdint>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <string_view>
+#include <optional>
+#include <array>
+#include <cwctype>
+#include <algorithm>
+
 namespace KeyData {
 
     inline constexpr std::string_view OLD_ROOT_PUBLIC_KEY{
@@ -24,7 +35,7 @@ inline constexpr std::array<std::wstring_view, 5> VALID_FILES{
 
 bool wstringCaseInsensitiveEquals(std::wstring_view lhs, std::wstring_view rhs) {
     return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
-        [](std::wint_t lhs, std::wint_t rhs) -> bool {
+        [](auto lhs, auto rhs) -> bool {
             return std::towlower(lhs) == std::towlower(rhs);
         });
 }
